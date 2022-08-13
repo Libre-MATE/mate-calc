@@ -16,20 +16,20 @@
 
 G_BEGIN_DECLS
 
-#define CURRENCY_MANAGER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), currency_manager_get_type(), CurrencyManager))
+#define CURRENCY_MANAGER(obj)                                     \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj), currency_manager_get_type(), \
+                              CurrencyManager))
 
 typedef struct CurrencyManagerPrivate CurrencyManagerPrivate;
 
-typedef struct
-{
-    GObject parent_instance;
-    CurrencyManagerPrivate *priv;
+typedef struct {
+  GObject parent_instance;
+  CurrencyManagerPrivate *priv;
 } CurrencyManager;
 
-typedef struct
-{
-    GObjectClass parent_class;
-    void (*updated)(CurrencyManager *manager);
+typedef struct {
+  GObjectClass parent_class;
+  void (*updated)(CurrencyManager *manager);
 } CurrencyManagerClass;
 
 GType currency_manager_get_type(void);
@@ -38,9 +38,11 @@ CurrencyManager *currency_manager_get_default(void);
 
 GList *currency_manager_get_currencies(CurrencyManager *manager);
 
-Currency *currency_manager_get_currency(CurrencyManager *manager, const gchar *name);
+Currency *currency_manager_get_currency(CurrencyManager *manager,
+                                        const gchar *name);
 
-const MPNumber *currency_manager_get_value(CurrencyManager *manager, const gchar *currency);
+const MPNumber *currency_manager_get_value(CurrencyManager *manager,
+                                           const gchar *currency);
 
 G_END_DECLS
 

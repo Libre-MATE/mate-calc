@@ -12,23 +12,24 @@
 #define MATH_VARIABLE_POPUP_H
 
 #include <gtk/gtk.h>
+
 #include "math-equation.h"
 
 G_BEGIN_DECLS
 
-#define MATH_VARIABLE_POPUP(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), math_variable_popup_get_type(), MathVariablePopup))
+#define MATH_VARIABLE_POPUP(obj)                                     \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj), math_variable_popup_get_type(), \
+                              MathVariablePopup))
 
 typedef struct MathVariablePopupPrivate MathVariablePopupPrivate;
 
-typedef struct
-{
-    GtkWindow parent_instance;
-    MathVariablePopupPrivate *priv;
+typedef struct {
+  GtkWindow parent_instance;
+  MathVariablePopupPrivate *priv;
 } MathVariablePopup;
 
-typedef struct
-{
-    GtkWindowClass parent_class;
+typedef struct {
+  GtkWindowClass parent_class;
 } MathVariablePopupClass;
 
 GType math_variable_popup_get_type(void);

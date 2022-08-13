@@ -21,34 +21,33 @@
 
 G_BEGIN_DECLS
 
-#define MATH_HISTORY_ENTRY(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), math_history_entry_get_type(), MathHistoryEntry))
+#define MATH_HISTORY_ENTRY(obj)                                     \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj), math_history_entry_get_type(), \
+                              MathHistoryEntry))
 
 typedef struct MathHistoryEntryPrivate MathHistoryEntryPrivate;
 
-typedef struct
-{
-    GtkListBoxRow parent_instance;
-    MathHistoryEntryPrivate *priv;
+typedef struct {
+  GtkListBoxRow parent_instance;
+  MathHistoryEntryPrivate *priv;
 } MathHistoryEntry;
 
-typedef struct
-{
-    GtkListBoxRowClass parent_class;
+typedef struct {
+  GtkListBoxRowClass parent_class;
 } MathHistoryEntryClass;
 
 GType math_history_entry_get_type(void);
 
-MathHistoryEntry *
-math_history_entry_new(MathEquation *equation);
+MathHistoryEntry *math_history_entry_new(MathEquation *equation);
 
-void
-math_history_entry_insert_entry(MathHistoryEntry *history_entry, const gchar *equation, MPNumber *answer, MpSerializer *serializer);
+void math_history_entry_insert_entry(MathHistoryEntry *history_entry,
+                                     const gchar *equation, MPNumber *answer,
+                                     MpSerializer *serializer);
 
-void 
-math_history_entry_redisplay(MathHistoryEntry *history_entry, MpSerializer *serializer);
+void math_history_entry_redisplay(MathHistoryEntry *history_entry,
+                                  MpSerializer *serializer);
 
-gchar *
-math_history_entry_get_equation(MathHistoryEntry *history_entry);
+gchar *math_history_entry_get_equation(MathHistoryEntry *history_entry);
 
 G_END_DECLS
 

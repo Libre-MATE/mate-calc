@@ -12,29 +12,28 @@
 #define CURRENCY_H
 
 #include <glib-object.h>
+
 #include "mp.h"
 
 G_BEGIN_DECLS
 
-#define CURRENCY(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), currency_get_type(), Currency))
+#define CURRENCY(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj), currency_get_type(), Currency))
 
 typedef struct CurrencyPrivate CurrencyPrivate;
 
-typedef struct
-{
-    GObject parent_instance;
-    CurrencyPrivate *priv;
+typedef struct {
+  GObject parent_instance;
+  CurrencyPrivate *priv;
 } Currency;
 
-typedef struct
-{
-    GObjectClass parent_class;
+typedef struct {
+  GObjectClass parent_class;
 } CurrencyClass;
 
 GType currency_get_type(void);
 
-Currency *currency_new(const gchar *name,
-                       const gchar *display_name,
+Currency *currency_new(const gchar *name, const gchar *display_name,
                        const gchar *symbol);
 
 const gchar *currency_get_name(Currency *currency);

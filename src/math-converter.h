@@ -19,34 +19,37 @@
 
 G_BEGIN_DECLS
 
-#define MATH_CONVERTER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), math_converter_get_type(), MathConverter))
+#define MATH_CONVERTER(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj), math_converter_get_type(), MathConverter))
 
 typedef struct MathConverterPrivate MathConverterPrivate;
 
-typedef struct
-{
-    GtkHBox parent_instance;
-    MathConverterPrivate *priv;
+typedef struct {
+  GtkHBox parent_instance;
+  MathConverterPrivate *priv;
 } MathConverter;
 
-typedef struct
-{
-    GtkHBoxClass parent_class;
+typedef struct {
+  GtkHBoxClass parent_class;
 
-    void (*changed)(MathConverter *converter);
+  void (*changed)(MathConverter *converter);
 } MathConverterClass;
 
 GType math_converter_get_type(void);
 
 MathConverter *math_converter_new(MathEquation *equation);
 
-void math_converter_set_category(MathConverter *converter, const gchar *category);
+void math_converter_set_category(MathConverter *converter,
+                                 const gchar *category);
 
 const gchar *math_converter_get_category(MathConverter *converter);
 
-void math_converter_set_conversion(MathConverter *converter, /*const gchar *category,*/ const gchar *unit_a, const gchar *unit_b);
+void math_converter_set_conversion(
+    MathConverter *converter, /*const gchar *category,*/ const gchar *unit_a,
+    const gchar *unit_b);
 
-void math_converter_get_conversion(MathConverter *converter, Unit **from_unit, Unit **to_unit);
+void math_converter_get_conversion(MathConverter *converter, Unit **from_unit,
+                                   Unit **to_unit);
 
 G_END_DECLS
 

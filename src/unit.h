@@ -13,33 +13,29 @@
 #define UNIT_H
 
 #include <glib-object.h>
+
 #include "mp.h"
 
 G_BEGIN_DECLS
 
-#define UNIT(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), unit_get_type(), Unit))
+#define UNIT(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), unit_get_type(), Unit))
 
 typedef struct UnitPrivate UnitPrivate;
 
-typedef struct
-{
-    GObject parent_instance;
-    UnitPrivate *priv;
+typedef struct {
+  GObject parent_instance;
+  UnitPrivate *priv;
 } Unit;
 
-typedef struct
-{
-    GObjectClass parent_class;
+typedef struct {
+  GObjectClass parent_class;
 } UnitClass;
 
 GType unit_get_type(void);
 
-Unit *unit_new(const gchar *name,
-               const gchar *display_name,
-               const gchar *format,
-               const gchar *from_function,
-               const gchar *to_function,
-               const gchar *symbols);
+Unit *unit_new(const gchar *name, const gchar *display_name,
+               const gchar *format, const gchar *from_function,
+               const gchar *to_function, const gchar *symbols);
 
 const gchar *unit_get_name(Unit *unit);
 

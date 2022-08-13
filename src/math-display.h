@@ -18,19 +18,18 @@
 
 G_BEGIN_DECLS
 
-#define MATH_DISPLAY(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), math_display_get_type(), MathDisplay))
+#define MATH_DISPLAY(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj), math_display_get_type(), MathDisplay))
 
 typedef struct MathDisplayPrivate MathDisplayPrivate;
 
-typedef struct
-{
-    GtkViewport parent_instance;
-    MathDisplayPrivate *priv;
+typedef struct {
+  GtkViewport parent_instance;
+  MathDisplayPrivate *priv;
 } MathDisplay;
 
-typedef struct
-{
-    GtkViewportClass parent_class;
+typedef struct {
+  GtkViewportClass parent_class;
 } MathDisplayClass;
 
 GType math_display_get_type(void);

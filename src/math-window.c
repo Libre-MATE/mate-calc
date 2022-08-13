@@ -13,710 +13,712 @@
 #include <config.h>
 #endif
 
+#include <gdk/gdkkeysyms.h>
 #include <glib/gi18n.h>
 #include <gtk/gtk.h>
-#include <gdk/gdkkeysyms.h>
 
-#include "math-window.h"
 #include "math-history.h"
+#include "math-window.h"
 #include "utility.h"
 
 // gtk3 hack
-	#ifndef GDK_KEY_F1
-		#define GDK_KEY_F1 GDK_F1
-	#endif
+#ifndef GDK_KEY_F1
+#define GDK_KEY_F1 GDK_F1
+#endif
 
-	#ifndef GDK_KEY_W
-		#define GDK_KEY_W GDK_w
-	#endif
+#ifndef GDK_KEY_W
+#define GDK_KEY_W GDK_w
+#endif
 
-	#ifndef GDK_KEY_Z
-		#define GDK_KEY_Z GDK_z
-	#endif
+#ifndef GDK_KEY_Z
+#define GDK_KEY_Z GDK_z
+#endif
 
-enum {
-    PROP_0,
-    PROP_EQUATION,
-    PROP_SHOW_HISTORY
+enum { PROP_0, PROP_EQUATION, PROP_SHOW_HISTORY };
+
+struct MathWindowPrivate {
+  GtkWidget *menu_bar;
+  MathEquation *equation;
+  MathDisplay *display;
+  MathHistory *history;
+  MathButtons *buttons;
+  MathPreferencesDialog *preferences_dialog;
+  gboolean right_aligned;
+  gboolean show_history;
+  GtkWidget *mode_basic_menu_item;
+  GtkWidget *mode_advanced_menu_item;
+  GtkWidget *mode_financial_menu_item;
+  GtkWidget *mode_programming_menu_item;
+  GtkWidget *view_history_menu_item;
 };
 
-struct MathWindowPrivate
-{
-    GtkWidget *menu_bar;
-    MathEquation *equation;
-    MathDisplay *display;
-    MathHistory *history;
-    MathButtons *buttons;
-    MathPreferencesDialog *preferences_dialog;
-    gboolean right_aligned;
-    gboolean show_history;
-    GtkWidget *mode_basic_menu_item;
-    GtkWidget *mode_advanced_menu_item;
-    GtkWidget *mode_financial_menu_item;
-    GtkWidget *mode_programming_menu_item;
-    GtkWidget *view_history_menu_item;
+G_DEFINE_TYPE_WITH_PRIVATE(MathWindow, math_window, GTK_TYPE_WINDOW);
+
+enum { QUIT, LAST_SIGNAL };
+
+static guint signals[LAST_SIGNAL] = {
+    0,
 };
 
-G_DEFINE_TYPE_WITH_PRIVATE (MathWindow, math_window, GTK_TYPE_WINDOW);
-
-enum
-{
-    QUIT,
-    LAST_SIGNAL
-};
-
-static guint signals[LAST_SIGNAL] = { 0, };
-
-MathWindow *
-math_window_new(MathEquation *equation)
-{
-    return g_object_new(math_window_get_type(),
-            "equation", equation, NULL);
+MathWindow *math_window_new(MathEquation *equation) {
+  return g_object_new(math_window_get_type(), "equation", equation, NULL);
 }
 
-GtkWidget *math_window_get_menu_bar(MathWindow *window)
-{
-    return window->priv->menu_bar;
+GtkWidget *math_window_get_menu_bar(MathWindow *window) {
+  return window->priv->menu_bar;
 }
 
-MathEquation *
-math_window_get_equation(MathWindow *window)
-{
-    g_return_val_if_fail(window != NULL, NULL);
-    return window->priv->equation;
+MathEquation *math_window_get_equation(MathWindow *window) {
+  g_return_val_if_fail(window != NULL, NULL);
+  return window->priv->equation;
 }
 
-MathDisplay *
-math_window_get_display(MathWindow *window)
-{
-    g_return_val_if_fail(window != NULL, NULL);
-    return window->priv->display;
+MathDisplay *math_window_get_display(MathWindow *window) {
+  g_return_val_if_fail(window != NULL, NULL);
+  return window->priv->display;
 }
 
-MathButtons *
-math_window_get_buttons(MathWindow *window)
-{
-    g_return_val_if_fail(window != NULL, NULL);
-    return window->priv->buttons;
+MathButtons *math_window_get_buttons(MathWindow *window) {
+  g_return_val_if_fail(window != NULL, NULL);
+  return window->priv->buttons;
 }
 
-gboolean
-math_window_get_show_history(MathWindow *window)
-{
-    g_return_val_if_fail(window != NULL, FALSE);
-    return window->priv->show_history;
+gboolean math_window_get_show_history(MathWindow *window) {
+  g_return_val_if_fail(window != NULL, FALSE);
+  return window->priv->show_history;
 }
 
-void
-math_window_set_show_history(MathWindow *window, gboolean visible)
-{
-    g_return_if_fail(window != NULL);
+void math_window_set_show_history(MathWindow *window, gboolean visible) {
+  g_return_if_fail(window != NULL);
 
-    if (math_window_get_show_history(window) == visible)
-        return;
+  if (math_window_get_show_history(window) == visible) return;
 
-    window->priv->show_history = visible;
+  window->priv->show_history = visible;
 
-    if (visible)
-    {
-        gtk_widget_show(GTK_WIDGET(window->priv->history));
-        gtk_window_set_resizable(GTK_WINDOW(window), TRUE);
-    }
-    else
-    {
-        gtk_widget_hide(GTK_WIDGET(window->priv->history));
-        gtk_window_resize(GTK_WINDOW(window), 1, 1); //FIXME: is there a better way to shrink window size to its children?
-        gtk_window_set_resizable(GTK_WINDOW(window), FALSE);
-    }
-    g_object_notify(G_OBJECT(window), "show-history");
+  if (visible) {
+    gtk_widget_show(GTK_WIDGET(window->priv->history));
+    gtk_window_set_resizable(GTK_WINDOW(window), TRUE);
+  } else {
+    gtk_widget_hide(GTK_WIDGET(window->priv->history));
+    gtk_window_resize(GTK_WINDOW(window), 1,
+                      1);  // FIXME: is there a better way to shrink window size
+                           // to its children?
+    gtk_window_set_resizable(GTK_WINDOW(window), FALSE);
+  }
+  g_object_notify(G_OBJECT(window), "show-history");
 }
 
-void
-math_window_critical_error(MathWindow *window, const gchar *title, const gchar *contents)
-{
-    GtkWidget *dialog;
+void math_window_critical_error(MathWindow *window, const gchar *title,
+                                const gchar *contents) {
+  GtkWidget *dialog;
 
-    g_return_if_fail(window != NULL);
-    g_return_if_fail(title != NULL);
-    g_return_if_fail(contents != NULL);
+  g_return_if_fail(window != NULL);
+  g_return_if_fail(title != NULL);
+  g_return_if_fail(contents != NULL);
 
-    dialog = gtk_message_dialog_new(NULL, 0,
-                                    GTK_MESSAGE_ERROR,
-                                    GTK_BUTTONS_NONE,
-                                    "%s", title);
-    gtk_message_dialog_format_secondary_text(GTK_MESSAGE_DIALOG(dialog),
-                                             "%s", contents);
-    gtk_dialog_add_buttons(GTK_DIALOG(dialog), "gtk-quit", GTK_RESPONSE_ACCEPT, NULL);
+  dialog = gtk_message_dialog_new(NULL, 0, GTK_MESSAGE_ERROR, GTK_BUTTONS_NONE,
+                                  "%s", title);
+  gtk_message_dialog_format_secondary_text(GTK_MESSAGE_DIALOG(dialog), "%s",
+                                           contents);
+  gtk_dialog_add_buttons(GTK_DIALOG(dialog), "gtk-quit", GTK_RESPONSE_ACCEPT,
+                         NULL);
 
-    gtk_dialog_run(GTK_DIALOG(dialog));
+  gtk_dialog_run(GTK_DIALOG(dialog));
 
-    g_signal_emit(window, signals[QUIT], 0);
+  g_signal_emit(window, signals[QUIT], 0);
 }
 
-static void mode_changed_cb(GtkWidget *menu, MathWindow *window)
-{
-    int mode;
+static void mode_changed_cb(GtkWidget *menu, MathWindow *window) {
+  int mode;
 
-    if (!gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu)))
-    {
-        return;
-    }
+  if (!gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu))) {
+    return;
+  }
 
-    mode = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(menu), "calcmode"));
-    math_buttons_set_mode(window->priv->buttons, mode);
+  mode = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(menu), "calcmode"));
+  math_buttons_set_mode(window->priv->buttons, mode);
 }
 
-static void history_check_toggled_cb(GtkWidget *menu, MathWindow *window)
-{
-    gboolean value;
+static void history_check_toggled_cb(GtkWidget *menu, MathWindow *window) {
+  gboolean value;
 
-    value = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu));
-    math_window_set_show_history(window, value);
+  value = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu));
+  math_window_set_show_history(window, value);
 }
 
-static void show_history_cb(MathWindow *window, GParamSpec *spec)
-{
-    GtkWidget *menu = window->priv->view_history_menu_item;
-    gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu),
-                                   math_window_get_show_history(window));
-    g_settings_set_boolean(g_settings_var, "show-history", math_window_get_show_history(window));
+static void show_history_cb(MathWindow *window, GParamSpec *spec) {
+  GtkWidget *menu = window->priv->view_history_menu_item;
+  gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu),
+                                 math_window_get_show_history(window));
+  g_settings_set_boolean(g_settings_var, "show-history",
+                         math_window_get_show_history(window));
 }
 
-static void clear_history_cb(GtkMenuItem *menu, MathWindow *window)
-{
-    math_history_clear(window->priv->history);
+static void clear_history_cb(GtkMenuItem *menu, MathWindow *window) {
+  math_history_clear(window->priv->history);
 }
 
-static void show_preferences_cb(GtkMenuItem *menu, MathWindow *window)
-{
-    if (!window->priv->preferences_dialog)
-    {
-        window->priv->preferences_dialog = math_preferences_dialog_new(window->priv->equation);
-        gtk_window_set_transient_for(GTK_WINDOW(window->priv->preferences_dialog), GTK_WINDOW(window));
+static void show_preferences_cb(GtkMenuItem *menu, MathWindow *window) {
+  if (!window->priv->preferences_dialog) {
+    window->priv->preferences_dialog =
+        math_preferences_dialog_new(window->priv->equation);
+    gtk_window_set_transient_for(GTK_WINDOW(window->priv->preferences_dialog),
+                                 GTK_WINDOW(window));
+  }
+
+  gtk_window_present(GTK_WINDOW(window->priv->preferences_dialog));
+}
+
+static gboolean key_press_cb(MathWindow *window, GdkEventKey *event) {
+  gboolean result;
+  g_signal_emit_by_name(window->priv->display, "key-press-event", event,
+                        &result);
+
+  /* Keyboard navigation for history */
+  if ((event->state & GDK_MOD1_MASK) == GDK_MOD1_MASK &&
+      (event->keyval == GDK_KEY_Up || event->keyval == GDK_KEY_Down)) {
+    switch (event->keyval) {
+      case GDK_KEY_Up:
+        math_history_set_current(window->priv->history, -1);
+        break;
+      case GDK_KEY_Down:
+        math_history_set_current(window->priv->history, 1);
+        break;
     }
 
-    gtk_window_present(GTK_WINDOW(window->priv->preferences_dialog));
-}
-
-static gboolean
-key_press_cb(MathWindow *window, GdkEventKey *event)
-{
-    gboolean result;
-    g_signal_emit_by_name(window->priv->display, "key-press-event", event, &result);
-
-    /* Keyboard navigation for history */
-    if ((event->state & GDK_MOD1_MASK) == GDK_MOD1_MASK && (event->keyval == GDK_KEY_Up || event->keyval == GDK_KEY_Down))
-    {
-        switch (event->keyval)
-        {
-            case GDK_KEY_Up:
-                math_history_set_current(window->priv->history, -1);
-                break;
-            case GDK_KEY_Down:
-                math_history_set_current(window->priv->history, 1);
-                break;
-        }
-
-        MathHistoryEntry *entry = math_history_get_entry_at(window->priv->history, math_history_get_current(window->priv->history));
-        if (entry)
-        {
-            gchar *equation_string = math_history_entry_get_equation(entry);
-            math_equation_set(window->priv->equation, equation_string);
-            g_free(equation_string);
-        }
+    MathHistoryEntry *entry = math_history_get_entry_at(
+        window->priv->history, math_history_get_current(window->priv->history));
+    if (entry) {
+      gchar *equation_string = math_history_entry_get_equation(entry);
+      math_equation_set(window->priv->equation, equation_string);
+      g_free(equation_string);
+    }
+    return TRUE;
+  } else if (math_buttons_get_mode(window->priv->buttons) == PROGRAMMING &&
+             (event->state & GDK_CONTROL_MASK) == GDK_CONTROL_MASK) {
+    switch (event->keyval) {
+      /* Binary */
+      case GDK_KEY_b:
+        math_equation_set_base(window->priv->equation, 2);
+        return TRUE;
+      /* Octal */
+      case GDK_KEY_o:
+        math_equation_set_base(window->priv->equation, 8);
+        return TRUE;
+      /* Decimal */
+      case GDK_KEY_d:
+        math_equation_set_base(window->priv->equation, 10);
+        return TRUE;
+      /* Hexdecimal */
+      case GDK_KEY_h:
+        math_equation_set_base(window->priv->equation, 16);
         return TRUE;
     }
-    else if (math_buttons_get_mode (window->priv->buttons) == PROGRAMMING && (event->state & GDK_CONTROL_MASK) == GDK_CONTROL_MASK) {
-        switch(event->keyval)
-        {
-        /* Binary */
-        case GDK_KEY_b:
-            math_equation_set_base (window->priv->equation, 2);
-            return TRUE;
-        /* Octal */
-        case GDK_KEY_o:
-            math_equation_set_base (window->priv->equation, 8);
-            return TRUE;
-        /* Decimal */
-        case GDK_KEY_d:
-            math_equation_set_base (window->priv->equation, 10);
-            return TRUE;
-        /* Hexdecimal */
-        case GDK_KEY_h:
-            math_equation_set_base (window->priv->equation, 16);
-            return TRUE;
-        }
-    }
+  }
 
-    return result;
+  return result;
 }
 
-static void delete_cb(MathWindow *window, GdkEvent *event)
-{
-    g_signal_emit(window, signals[QUIT], 0);
+static void delete_cb(MathWindow *window, GdkEvent *event) {
+  g_signal_emit(window, signals[QUIT], 0);
 }
 
-static void copy_cb(GtkWidget *widget, MathWindow *window)
-{
-    math_equation_copy(window->priv->equation);
+static void copy_cb(GtkWidget *widget, MathWindow *window) {
+  math_equation_copy(window->priv->equation);
 }
 
-static void paste_cb(GtkWidget *widget, MathWindow *window)
-{
-    math_equation_paste(window->priv->equation);
+static void paste_cb(GtkWidget *widget, MathWindow *window) {
+  math_equation_paste(window->priv->equation);
 }
 
-static void undo_cb(GtkWidget *widget, MathWindow *window)
-{
-    math_equation_undo(window->priv->equation);
+static void undo_cb(GtkWidget *widget, MathWindow *window) {
+  math_equation_undo(window->priv->equation);
 }
 
-static void redo_cb(GtkWidget *widget, MathWindow *window)
-{
-    math_equation_redo(window->priv->equation);
+static void redo_cb(GtkWidget *widget, MathWindow *window) {
+  math_equation_redo(window->priv->equation);
 }
 
-static void help_cb(GtkWidget *widget, MathWindow *window)
-{
-    GError *error = NULL;
+static void help_cb(GtkWidget *widget, MathWindow *window) {
+  GError *error = NULL;
 
-    gtk_show_uri_on_window(GTK_WINDOW(window),
-                           "help:mate-calc",
-                           gtk_get_current_event_time(),
-                           &error);
+  gtk_show_uri_on_window(GTK_WINDOW(window), "help:mate-calc",
+                         gtk_get_current_event_time(), &error);
 
-    if (error != NULL)
-    {
-        GtkWidget *d;
-        /* Translators: Error message displayed when unable to launch help browser */
-        const char *message = _("Unable to open help file");
+  if (error != NULL) {
+    GtkWidget *d;
+    /* Translators: Error message displayed when unable to launch help browser
+     */
+    const char *message = _("Unable to open help file");
 
-        d = gtk_message_dialog_new(GTK_WINDOW(window), GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
-                GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE, "%s", message);
-        gtk_message_dialog_format_secondary_text(GTK_MESSAGE_DIALOG(d), "%s", error->message);
-        g_signal_connect(d, "response", G_CALLBACK(gtk_widget_destroy), NULL);
-        gtk_window_present(GTK_WINDOW (d));
+    d = gtk_message_dialog_new(
+        GTK_WINDOW(window), GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
+        GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE, "%s", message);
+    gtk_message_dialog_format_secondary_text(GTK_MESSAGE_DIALOG(d), "%s",
+                                             error->message);
+    g_signal_connect(d, "response", G_CALLBACK(gtk_widget_destroy), NULL);
+    gtk_window_present(GTK_WINDOW(d));
 
-        g_error_free(error);
-    }
+    g_error_free(error);
+  }
 }
 
 #define ABOUT_GROUP "About"
-#define EMAILIFY(string) (g_strdelimit ((string), "%", '@'))
+#define EMAILIFY(string) (g_strdelimit((string), "%", '@'))
 
-static void about_cb(GtkWidget* widget, MathWindow* window)
-{
-    const char* documenters[] = {
-        N_("Sun Microsystems"),
-        N_("MATE Documentation Team"),
-        NULL
-    };
+static void about_cb(GtkWidget *widget, MathWindow *window) {
+  const char *documenters[] = {N_("Sun Microsystems"),
+                               N_("MATE Documentation Team"), NULL};
 
-    /* The license this software is under (GPL2+) */
-    const char* license[] = {
-        N_("MATE Calculator is free software; you can redistribute it and/or modify "
-           "it under the terms of the GNU General Public License as published by "
-           "the Free Software Foundation; either version 2 of the License, or "
-           "(at your option) any later version."),
-        N_("MATE Calculator is distributed in the hope that it will be useful, "
-           "but WITHOUT ANY WARRANTY; without even the implied warranty of "
-           "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the "
-           "GNU General Public License for more details."),
-        N_("You should have received a copy of the GNU General Public License "
-           "along with MATE Calculator; if not, write to the Free Software Foundation, Inc., "
-           "51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.")
-    };
+  /* The license this software is under (GPL2+) */
+  const char *license[] = {
+      N_("MATE Calculator is free software; you can redistribute it and/or "
+         "modify "
+         "it under the terms of the GNU General Public License as published by "
+         "the Free Software Foundation; either version 2 of the License, or "
+         "(at your option) any later version."),
+      N_("MATE Calculator is distributed in the hope that it will be useful, "
+         "but WITHOUT ANY WARRANTY; without even the implied warranty of "
+         "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the "
+         "GNU General Public License for more details."),
+      N_("You should have received a copy of the GNU General Public License "
+         "along with MATE Calculator; if not, write to the Free Software "
+         "Foundation, Inc., "
+         "51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.")};
 
-    char *license_trans = g_strjoin ("\n\n", _(license[0]), _(license[1]), _(license[2]), NULL);
+  char *license_trans =
+      g_strjoin("\n\n", _(license[0]), _(license[1]), _(license[2]), NULL);
 
-    GKeyFile *key_file;
-    GBytes *bytes;
-    const guint8 *data;
-    gsize data_len;
-    GError *error = NULL;
-    char **authors;
-    gsize n_authors = 0, i;
-    gchar *comments = NULL;
+  GKeyFile *key_file;
+  GBytes *bytes;
+  const guint8 *data;
+  gsize data_len;
+  GError *error = NULL;
+  char **authors;
+  gsize n_authors = 0, i;
+  gchar *comments = NULL;
 
-    bytes = g_resources_lookup_data ("/org/mate/calculator/ui/mate-calc.about", G_RESOURCE_LOOKUP_FLAGS_NONE, &error);
-    g_assert_no_error (error);
+  bytes = g_resources_lookup_data("/org/mate/calculator/ui/mate-calc.about",
+                                  G_RESOURCE_LOOKUP_FLAGS_NONE, &error);
+  g_assert_no_error(error);
 
-    data = g_bytes_get_data (bytes, &data_len);
-    key_file = g_key_file_new ();
-    g_key_file_load_from_data (key_file, (const char *) data, data_len, 0, &error);
-    g_assert_no_error (error);
+  data = g_bytes_get_data(bytes, &data_len);
+  key_file = g_key_file_new();
+  g_key_file_load_from_data(key_file, (const char *)data, data_len, 0, &error);
+  g_assert_no_error(error);
 
-    authors = g_key_file_get_string_list (key_file, ABOUT_GROUP, "Authors", &n_authors, NULL);
+  authors = g_key_file_get_string_list(key_file, ABOUT_GROUP, "Authors",
+                                       &n_authors, NULL);
 
-    g_key_file_free (key_file);
-    g_bytes_unref (bytes);
+  g_key_file_free(key_file);
+  g_bytes_unref(bytes);
 
-    for (i = 0; i < n_authors; ++i)
-        authors[i] = EMAILIFY (authors[i]);
+  for (i = 0; i < n_authors; ++i) authors[i] = EMAILIFY(authors[i]);
 
-    const char **p;
+  const char **p;
 
-    for (p = documenters; *p; ++p)
-        *p = _(*p);
+  for (p = documenters; *p; ++p) *p = _(*p);
 
-    comments = g_strdup_printf (_("Calculator with financial and scientific modes.\nUsing GNU MPFR %s and GNU MPC %s"),
-                                mpfr_get_version (), mpc_get_version ());
+  comments = g_strdup_printf(_("Calculator with financial and scientific "
+                               "modes.\nUsing GNU MPFR %s and GNU MPC %s"),
+                             mpfr_get_version(), mpc_get_version());
 
-    gtk_show_about_dialog(GTK_WINDOW(window),
-        "program-name", _("MATE Calculator"),
-        "version", VERSION,
-        "title", _("About MATE Calculator"),
-        "copyright", _("Copyright \xc2\xa9 1986–2010 The GCalctool authors\n"
-                       "Copyright \xc2\xa9 2011-2021 MATE developers"),
-        "license", license_trans,
-        "comments", comments,
-        "authors", authors,
-        "documenters", documenters,
-        "translator_credits", _("translator-credits"),
-        "wrap-license", TRUE,
-        "website", PACKAGE_URL,
-        "icon-name", "accessories-calculator",
-        "logo-icon-name", "accessories-calculator",
-        NULL);
+  gtk_show_about_dialog(
+      GTK_WINDOW(window), "program-name", _("MATE Calculator"), "version",
+      VERSION, "title", _("About MATE Calculator"), "copyright",
+      _("Copyright \xc2\xa9 1986–2010 The GCalctool authors\n"
+        "Copyright \xc2\xa9 2011-2021 MATE developers"),
+      "license", license_trans, "comments", comments, "authors", authors,
+      "documenters", documenters, "translator_credits", _("translator-credits"),
+      "wrap-license", TRUE, "website", PACKAGE_URL, "icon-name",
+      "accessories-calculator", "logo-icon-name", "accessories-calculator",
+      NULL);
 
-    g_free (comments);
-    g_strfreev (authors);
-    g_free (license_trans);
+  g_free(comments);
+  g_strfreev(authors);
+  g_free(license_trans);
 }
 
-static void
-scroll_changed_cb(GtkAdjustment *adjustment, MathWindow *window)
-{
-    if (window->priv->right_aligned)
-        gtk_adjustment_set_value(adjustment, gtk_adjustment_get_upper(adjustment) - gtk_adjustment_get_page_size(adjustment));
+static void scroll_changed_cb(GtkAdjustment *adjustment, MathWindow *window) {
+  if (window->priv->right_aligned)
+    gtk_adjustment_set_value(adjustment,
+                             gtk_adjustment_get_upper(adjustment) -
+                                 gtk_adjustment_get_page_size(adjustment));
 }
 
-static void
-scroll_value_changed_cb(GtkAdjustment *adjustment, MathWindow *window)
-{
-    if (gtk_adjustment_get_value(adjustment) == gtk_adjustment_get_upper(adjustment) - gtk_adjustment_get_page_size(adjustment))
-        window->priv->right_aligned = TRUE;
-    else
-        window->priv->right_aligned = FALSE;
-}
-
-static void button_mode_changed_cb(MathButtons *buttons, GParamSpec *spec, MathWindow *window)
-{
-    GtkWidget *menu;
-
-    switch (math_buttons_get_mode(buttons))
-    {
-        default:
-        case BASIC:
-            menu = window->priv->mode_basic_menu_item;
-            break;
-        case ADVANCED:
-            menu = window->priv->mode_advanced_menu_item;
-            break;
-        case FINANCIAL:
-            menu = window->priv->mode_financial_menu_item;
-            break;
-        case PROGRAMMING:
-            menu = window->priv->mode_programming_menu_item;
-            break;
-    }
-
-    gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu), TRUE);
-    g_settings_set_enum(g_settings_var, "button-mode", math_buttons_get_mode(buttons));
-}
-
-static GtkWidget *add_menu(GtkWidget *menu_bar, const gchar *name)
-{
-    GtkWidget *menu_item;
-    GtkWidget *menu;
-
-    menu_item = gtk_menu_item_new_with_mnemonic(name);
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu_bar), menu_item);
-    gtk_widget_show(menu_item);
-    menu = gtk_menu_new();
-    gtk_menu_set_reserve_toggle_size(GTK_MENU(menu),FALSE);
-    gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item), menu);
-
-    return menu;
-}
-
-static void
-update_history_cb (MathEquation *equation, char *equation_string, MPNumber *answer, MathWindow *window)
-{   /* Recieves signal emitted by a MathEquation object for updating history */
-    math_history_insert_entry (window->priv->history, equation_string, answer); /* Sends current equation string and answer for updating History-View */
-}
-
-static void
-history_set_serializer_cb(MathEquation *equation, MathWindow *window)
-{
-    MpSerializer *serializer = math_equation_get_serializer(equation);
-
-    math_history_set_serializer(window->priv->history, serializer);
-}
-
-static void quit_cb(GtkWidget* widget, MathWindow* window)
-{
-    g_signal_emit(window, signals[QUIT], 0);
-}
-
-static GtkWidget *add_menu_item(GtkWidget *menu, GtkWidget *menu_item, GCallback callback, gpointer callback_data)
-{
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_item);
-    gtk_widget_show(menu_item);
-
-    if (callback)
-    {
-        g_signal_connect(G_OBJECT(menu_item), "activate", callback, callback_data);
-    }
-
-    return menu_item;
-}
-
-static GtkWidget *radio_menu_item_new(GSList **group, const gchar *name)
-{
-    GtkWidget *menu_item = gtk_radio_menu_item_new_with_mnemonic(*group, name);
-
-    *group = gtk_radio_menu_item_get_group(GTK_RADIO_MENU_ITEM(menu_item));
-
-    return menu_item;
-}
-
-static GtkWidget *gtk_image_menu_item_new_from_icon (const gchar   *icon_name,
-                                                     const gchar   *label_name,
-                                                     GtkAccelGroup *accel_group)
-{
-    gchar *concat = g_strconcat (label_name, "     ", NULL);
-    GtkWidget *box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 6);
-    GtkWidget *icon = gtk_image_new_from_icon_name (icon_name, GTK_ICON_SIZE_MENU);
-    GtkWidget *label = gtk_accel_label_new (concat);
-    GtkWidget *menu_item = gtk_menu_item_new ();
-
-    g_free (concat);
-
-    gtk_container_add (GTK_CONTAINER (box), icon);
-
-    gtk_label_set_use_underline (GTK_LABEL (label), TRUE);
-    gtk_label_set_xalign (GTK_LABEL (label), 0.0);
-
-    gtk_accel_label_set_accel_widget (GTK_ACCEL_LABEL (label), menu_item);
-
-    gtk_box_pack_end (GTK_BOX (box), label, TRUE, TRUE, 0);
-
-    gtk_container_add (GTK_CONTAINER (menu_item), box);
-
-    gtk_widget_show_all (menu_item);
-
-    return menu_item;
-}
-
-static void create_menu(MathWindow* window)
-{
-    GtkAccelGroup* accel_group;
-    GtkWidget* menu;
-    GtkWidget* menu_item;
-    GSList* group = NULL;
-
-    accel_group = gtk_accel_group_new();
-    gtk_window_add_accel_group(GTK_WINDOW(window), accel_group);
-
-    /* Calculator menu */
-    #define CALCULATOR_MENU_LABEL _("_Calculator")
-    /* Mode menu */
-    #define MODE_MENU_LABEL _("_Mode")
-    /* View menu */
-    #define VIEW_MENU_LABEL _("_View")
-    /* Help menu label */
-    #define HELP_MENU_LABEL _("_Help")
-    /* Basic menu label */
-    #define MODE_BASIC_LABEL _("_Basic")
-    /* Advanced menu label */
-    #define MODE_ADVANCED_LABEL _("_Advanced")
-    /* Financial menu label */
-    #define MODE_FINANCIAL_LABEL _("_Financial")
-    /* Programming menu label */
-    #define MODE_PROGRAMMING_LABEL _("_Programming")
-    /* History menu label */
-    #define VIEW_HISTORY_LABEL _("_History")
-    /* Help>Contents menu label */
-    #define HELP_CONTENTS_LABEL _("_Contents")
-
-    menu = add_menu(window->priv->menu_bar, CALCULATOR_MENU_LABEL);
-    menu_item = add_menu_item(menu, gtk_image_menu_item_new_from_icon("edit-copy",_("_Copy"), accel_group), G_CALLBACK(copy_cb), window);
-    gtk_widget_add_accelerator(menu_item, "activate", accel_group, GDK_KEY_C, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
-    menu_item = add_menu_item(menu, gtk_image_menu_item_new_from_icon("edit-paste",_("_Paste"), accel_group), G_CALLBACK(paste_cb), window);
-    gtk_widget_add_accelerator(menu_item, "activate", accel_group, GDK_KEY_V, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
-    menu_item = add_menu_item(menu, gtk_image_menu_item_new_from_icon("edit-undo",_("_Undo"), accel_group), G_CALLBACK(undo_cb), window);
-    gtk_widget_add_accelerator(menu_item, "activate", accel_group, GDK_KEY_Z, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
-    menu_item = add_menu_item(menu, gtk_image_menu_item_new_from_icon("edit-redo",_("_Redo"), accel_group), G_CALLBACK(redo_cb), window);
-    gtk_widget_add_accelerator(menu_item, "activate", accel_group, GDK_KEY_Z, GDK_CONTROL_MASK | GDK_SHIFT_MASK, GTK_ACCEL_VISIBLE);
-    menu_item = add_menu_item(menu, gtk_image_menu_item_new_from_icon("edit-clear",_("_Clear History"), accel_group), G_CALLBACK(clear_history_cb), window);
-    gtk_widget_add_accelerator(menu_item, "activate", accel_group, GDK_KEY_Delete, GDK_CONTROL_MASK | GDK_SHIFT_MASK, GTK_ACCEL_VISIBLE);
-    add_menu_item(menu, gtk_separator_menu_item_new(), NULL, NULL);
-    add_menu_item(menu, gtk_image_menu_item_new_from_icon("preferences-desktop",_("_Preferences"), accel_group), G_CALLBACK(show_preferences_cb), window);
-    add_menu_item(menu, gtk_separator_menu_item_new(), NULL, NULL);
-    menu_item = add_menu_item(menu, gtk_image_menu_item_new_from_icon("application-exit",_("_Quit"), accel_group), G_CALLBACK(quit_cb), window);
-    gtk_widget_add_accelerator(menu_item, "activate", accel_group, GDK_KEY_Q, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
-    gtk_widget_add_accelerator(menu_item, "activate", accel_group, GDK_KEY_W, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
-
-    menu = add_menu(window->priv->menu_bar, MODE_MENU_LABEL);
-    window->priv->mode_basic_menu_item = add_menu_item(menu, radio_menu_item_new(&group, MODE_BASIC_LABEL), G_CALLBACK(mode_changed_cb), window);
-    g_object_set_data(G_OBJECT(window->priv->mode_basic_menu_item), "calcmode", GINT_TO_POINTER(BASIC));
-    window->priv->mode_advanced_menu_item = add_menu_item(menu, radio_menu_item_new(&group, MODE_ADVANCED_LABEL), G_CALLBACK(mode_changed_cb), window);
-    g_object_set_data(G_OBJECT(window->priv->mode_advanced_menu_item), "calcmode", GINT_TO_POINTER(ADVANCED));
-    window->priv->mode_financial_menu_item = add_menu_item(menu, radio_menu_item_new(&group, MODE_FINANCIAL_LABEL), G_CALLBACK(mode_changed_cb), window);
-    g_object_set_data(G_OBJECT(window->priv->mode_financial_menu_item), "calcmode", GINT_TO_POINTER(FINANCIAL));
-    window->priv->mode_programming_menu_item = add_menu_item(menu, radio_menu_item_new(&group, MODE_PROGRAMMING_LABEL), G_CALLBACK(mode_changed_cb), window);
-    g_object_set_data(G_OBJECT(window->priv->mode_programming_menu_item), "calcmode", GINT_TO_POINTER(PROGRAMMING));
-
-    menu = add_menu(window->priv->menu_bar, VIEW_MENU_LABEL);
-    window->priv->view_history_menu_item = add_menu_item(menu, gtk_check_menu_item_new_with_mnemonic(VIEW_HISTORY_LABEL), G_CALLBACK(history_check_toggled_cb), window);
-    gtk_widget_add_accelerator(window->priv->view_history_menu_item, "activate", accel_group, GDK_KEY_H, GDK_CONTROL_MASK | GDK_SHIFT_MASK, GTK_ACCEL_VISIBLE);
-
-    menu = add_menu(window->priv->menu_bar, HELP_MENU_LABEL);
-    menu_item = add_menu_item(menu, gtk_image_menu_item_new_from_icon("help-browser", HELP_CONTENTS_LABEL, accel_group), G_CALLBACK(help_cb), window);
-    gtk_widget_add_accelerator(menu_item, "activate", accel_group, GDK_KEY_F1, 0, GTK_ACCEL_VISIBLE);
-    add_menu_item(menu, gtk_image_menu_item_new_from_icon("help-about",_("_About"), accel_group), G_CALLBACK(about_cb), window);
-}
-
-static void
-create_gui(MathWindow *window)
-{
-    GtkWidget *main_vbox, *vbox;
-    GtkWidget *scrolled_window;
-
-    main_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-    gtk_container_add(GTK_CONTAINER(window), main_vbox);
-    gtk_widget_show(main_vbox);
-
-    window->priv->menu_bar = gtk_menu_bar_new();
-    gtk_box_pack_start(GTK_BOX(main_vbox), window->priv->menu_bar, FALSE, FALSE, 0);
-    gtk_widget_show(window->priv->menu_bar);
-
-    create_menu(window);
-
-    vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
-    gtk_container_set_border_width(GTK_CONTAINER(vbox), 6);
-    gtk_box_pack_start(GTK_BOX(main_vbox), vbox, TRUE, TRUE, 0);
-    gtk_widget_show(vbox);
-
-    window->priv->history = math_history_new(window->priv->equation);
-    g_signal_connect(window->priv->equation, "history", G_CALLBACK(update_history_cb), window);
-    g_signal_connect(window, "notify::show-history", G_CALLBACK(show_history_cb), NULL);
-    show_history_cb(window, NULL);
-    g_signal_connect(window->priv->equation, "display-changed", G_CALLBACK(history_set_serializer_cb), window);
-    history_set_serializer_cb(window->priv->equation, window);
-    gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(window->priv->history), TRUE, TRUE, 0);
-
-    scrolled_window = gtk_scrolled_window_new(NULL, NULL);
-    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window), GTK_POLICY_AUTOMATIC, GTK_POLICY_NEVER);
-    gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(scrolled_window), GTK_SHADOW_IN);
-    gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(scrolled_window), FALSE, FALSE, 0);
-    g_signal_connect(gtk_scrolled_window_get_hadjustment(GTK_SCROLLED_WINDOW(scrolled_window)), "changed", G_CALLBACK(scroll_changed_cb), window);
-    g_signal_connect(gtk_scrolled_window_get_hadjustment(GTK_SCROLLED_WINDOW(scrolled_window)), "value-changed", G_CALLBACK(scroll_value_changed_cb), window);
+static void scroll_value_changed_cb(GtkAdjustment *adjustment,
+                                    MathWindow *window) {
+  if (gtk_adjustment_get_value(adjustment) ==
+      gtk_adjustment_get_upper(adjustment) -
+          gtk_adjustment_get_page_size(adjustment))
     window->priv->right_aligned = TRUE;
-    gtk_widget_show(scrolled_window);
-
-    window->priv->display = math_display_new_with_equation(window->priv->equation);
-    gtk_container_add(GTK_CONTAINER(scrolled_window), GTK_WIDGET(window->priv->display));
-    gtk_widget_show(GTK_WIDGET(window->priv->display));
-
-    window->priv->buttons = math_buttons_new(window->priv->equation);
-    g_signal_connect(window->priv->buttons, "notify::mode", G_CALLBACK(button_mode_changed_cb), window);
-    button_mode_changed_cb(window->priv->buttons, NULL, window);
-    gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(window->priv->buttons), FALSE, FALSE, 0);
-    gtk_widget_show(GTK_WIDGET(window->priv->buttons));
+  else
+    window->priv->right_aligned = FALSE;
 }
 
-static void
-math_window_set_property(GObject      *object,
-                         guint         prop_id,
-                         const GValue *value,
-                         GParamSpec   *pspec)
-{
-    MathWindow *self;
+static void button_mode_changed_cb(MathButtons *buttons, GParamSpec *spec,
+                                   MathWindow *window) {
+  GtkWidget *menu;
 
-    self = MATH_WINDOW(object);
-
-    switch (prop_id) {
-    case PROP_EQUATION:
-        self->priv->equation = g_value_get_object(value);
-        create_gui(self);
-        break;
-    case PROP_SHOW_HISTORY:
-        math_window_set_show_history(self, g_value_get_boolean(value));
-        break;
+  switch (math_buttons_get_mode(buttons)) {
     default:
-        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
-        break;
-    }
+    case BASIC:
+      menu = window->priv->mode_basic_menu_item;
+      break;
+    case ADVANCED:
+      menu = window->priv->mode_advanced_menu_item;
+      break;
+    case FINANCIAL:
+      menu = window->priv->mode_financial_menu_item;
+      break;
+    case PROGRAMMING:
+      menu = window->priv->mode_programming_menu_item;
+      break;
+  }
+
+  gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu), TRUE);
+  g_settings_set_enum(g_settings_var, "button-mode",
+                      math_buttons_get_mode(buttons));
 }
 
-static void
-math_window_get_property(GObject    *object,
-                         guint       prop_id,
-                         GValue     *value,
-                         GParamSpec *pspec)
-{
-    MathWindow *self;
+static GtkWidget *add_menu(GtkWidget *menu_bar, const gchar *name) {
+  GtkWidget *menu_item;
+  GtkWidget *menu;
 
-    self = MATH_WINDOW(object);
+  menu_item = gtk_menu_item_new_with_mnemonic(name);
+  gtk_menu_shell_append(GTK_MENU_SHELL(menu_bar), menu_item);
+  gtk_widget_show(menu_item);
+  menu = gtk_menu_new();
+  gtk_menu_set_reserve_toggle_size(GTK_MENU(menu), FALSE);
+  gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item), menu);
 
-    switch (prop_id) {
+  return menu;
+}
+
+static void update_history_cb(
+    MathEquation *equation, char *equation_string, MPNumber *answer,
+    MathWindow *window) { /* Recieves signal emitted by a MathEquation object
+                             for updating history */
+  math_history_insert_entry(window->priv->history, equation_string,
+                            answer); /* Sends current equation string and answer
+                                        for updating History-View */
+}
+
+static void history_set_serializer_cb(MathEquation *equation,
+                                      MathWindow *window) {
+  MpSerializer *serializer = math_equation_get_serializer(equation);
+
+  math_history_set_serializer(window->priv->history, serializer);
+}
+
+static void quit_cb(GtkWidget *widget, MathWindow *window) {
+  g_signal_emit(window, signals[QUIT], 0);
+}
+
+static GtkWidget *add_menu_item(GtkWidget *menu, GtkWidget *menu_item,
+                                GCallback callback, gpointer callback_data) {
+  gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_item);
+  gtk_widget_show(menu_item);
+
+  if (callback) {
+    g_signal_connect(G_OBJECT(menu_item), "activate", callback, callback_data);
+  }
+
+  return menu_item;
+}
+
+static GtkWidget *radio_menu_item_new(GSList **group, const gchar *name) {
+  GtkWidget *menu_item = gtk_radio_menu_item_new_with_mnemonic(*group, name);
+
+  *group = gtk_radio_menu_item_get_group(GTK_RADIO_MENU_ITEM(menu_item));
+
+  return menu_item;
+}
+
+static GtkWidget *gtk_image_menu_item_new_from_icon(
+    const gchar *icon_name, const gchar *label_name,
+    GtkAccelGroup *accel_group) {
+  gchar *concat = g_strconcat(label_name, "     ", NULL);
+  GtkWidget *box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
+  GtkWidget *icon = gtk_image_new_from_icon_name(icon_name, GTK_ICON_SIZE_MENU);
+  GtkWidget *label = gtk_accel_label_new(concat);
+  GtkWidget *menu_item = gtk_menu_item_new();
+
+  g_free(concat);
+
+  gtk_container_add(GTK_CONTAINER(box), icon);
+
+  gtk_label_set_use_underline(GTK_LABEL(label), TRUE);
+  gtk_label_set_xalign(GTK_LABEL(label), 0.0);
+
+  gtk_accel_label_set_accel_widget(GTK_ACCEL_LABEL(label), menu_item);
+
+  gtk_box_pack_end(GTK_BOX(box), label, TRUE, TRUE, 0);
+
+  gtk_container_add(GTK_CONTAINER(menu_item), box);
+
+  gtk_widget_show_all(menu_item);
+
+  return menu_item;
+}
+
+static void create_menu(MathWindow *window) {
+  GtkAccelGroup *accel_group;
+  GtkWidget *menu;
+  GtkWidget *menu_item;
+  GSList *group = NULL;
+
+  accel_group = gtk_accel_group_new();
+  gtk_window_add_accel_group(GTK_WINDOW(window), accel_group);
+
+/* Calculator menu */
+#define CALCULATOR_MENU_LABEL _("_Calculator")
+/* Mode menu */
+#define MODE_MENU_LABEL _("_Mode")
+/* View menu */
+#define VIEW_MENU_LABEL _("_View")
+/* Help menu label */
+#define HELP_MENU_LABEL _("_Help")
+/* Basic menu label */
+#define MODE_BASIC_LABEL _("_Basic")
+/* Advanced menu label */
+#define MODE_ADVANCED_LABEL _("_Advanced")
+/* Financial menu label */
+#define MODE_FINANCIAL_LABEL _("_Financial")
+/* Programming menu label */
+#define MODE_PROGRAMMING_LABEL _("_Programming")
+/* History menu label */
+#define VIEW_HISTORY_LABEL _("_History")
+/* Help>Contents menu label */
+#define HELP_CONTENTS_LABEL _("_Contents")
+
+  menu = add_menu(window->priv->menu_bar, CALCULATOR_MENU_LABEL);
+  menu_item = add_menu_item(
+      menu,
+      gtk_image_menu_item_new_from_icon("edit-copy", _("_Copy"), accel_group),
+      G_CALLBACK(copy_cb), window);
+  gtk_widget_add_accelerator(menu_item, "activate", accel_group, GDK_KEY_C,
+                             GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
+  menu_item = add_menu_item(
+      menu,
+      gtk_image_menu_item_new_from_icon("edit-paste", _("_Paste"), accel_group),
+      G_CALLBACK(paste_cb), window);
+  gtk_widget_add_accelerator(menu_item, "activate", accel_group, GDK_KEY_V,
+                             GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
+  menu_item = add_menu_item(
+      menu,
+      gtk_image_menu_item_new_from_icon("edit-undo", _("_Undo"), accel_group),
+      G_CALLBACK(undo_cb), window);
+  gtk_widget_add_accelerator(menu_item, "activate", accel_group, GDK_KEY_Z,
+                             GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
+  menu_item = add_menu_item(
+      menu,
+      gtk_image_menu_item_new_from_icon("edit-redo", _("_Redo"), accel_group),
+      G_CALLBACK(redo_cb), window);
+  gtk_widget_add_accelerator(menu_item, "activate", accel_group, GDK_KEY_Z,
+                             GDK_CONTROL_MASK | GDK_SHIFT_MASK,
+                             GTK_ACCEL_VISIBLE);
+  menu_item = add_menu_item(menu,
+                            gtk_image_menu_item_new_from_icon(
+                                "edit-clear", _("_Clear History"), accel_group),
+                            G_CALLBACK(clear_history_cb), window);
+  gtk_widget_add_accelerator(menu_item, "activate", accel_group, GDK_KEY_Delete,
+                             GDK_CONTROL_MASK | GDK_SHIFT_MASK,
+                             GTK_ACCEL_VISIBLE);
+  add_menu_item(menu, gtk_separator_menu_item_new(), NULL, NULL);
+  add_menu_item(menu,
+                gtk_image_menu_item_new_from_icon(
+                    "preferences-desktop", _("_Preferences"), accel_group),
+                G_CALLBACK(show_preferences_cb), window);
+  add_menu_item(menu, gtk_separator_menu_item_new(), NULL, NULL);
+  menu_item = add_menu_item(menu,
+                            gtk_image_menu_item_new_from_icon(
+                                "application-exit", _("_Quit"), accel_group),
+                            G_CALLBACK(quit_cb), window);
+  gtk_widget_add_accelerator(menu_item, "activate", accel_group, GDK_KEY_Q,
+                             GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
+  gtk_widget_add_accelerator(menu_item, "activate", accel_group, GDK_KEY_W,
+                             GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
+
+  menu = add_menu(window->priv->menu_bar, MODE_MENU_LABEL);
+  window->priv->mode_basic_menu_item =
+      add_menu_item(menu, radio_menu_item_new(&group, MODE_BASIC_LABEL),
+                    G_CALLBACK(mode_changed_cb), window);
+  g_object_set_data(G_OBJECT(window->priv->mode_basic_menu_item), "calcmode",
+                    GINT_TO_POINTER(BASIC));
+  window->priv->mode_advanced_menu_item =
+      add_menu_item(menu, radio_menu_item_new(&group, MODE_ADVANCED_LABEL),
+                    G_CALLBACK(mode_changed_cb), window);
+  g_object_set_data(G_OBJECT(window->priv->mode_advanced_menu_item), "calcmode",
+                    GINT_TO_POINTER(ADVANCED));
+  window->priv->mode_financial_menu_item =
+      add_menu_item(menu, radio_menu_item_new(&group, MODE_FINANCIAL_LABEL),
+                    G_CALLBACK(mode_changed_cb), window);
+  g_object_set_data(G_OBJECT(window->priv->mode_financial_menu_item),
+                    "calcmode", GINT_TO_POINTER(FINANCIAL));
+  window->priv->mode_programming_menu_item =
+      add_menu_item(menu, radio_menu_item_new(&group, MODE_PROGRAMMING_LABEL),
+                    G_CALLBACK(mode_changed_cb), window);
+  g_object_set_data(G_OBJECT(window->priv->mode_programming_menu_item),
+                    "calcmode", GINT_TO_POINTER(PROGRAMMING));
+
+  menu = add_menu(window->priv->menu_bar, VIEW_MENU_LABEL);
+  window->priv->view_history_menu_item = add_menu_item(
+      menu, gtk_check_menu_item_new_with_mnemonic(VIEW_HISTORY_LABEL),
+      G_CALLBACK(history_check_toggled_cb), window);
+  gtk_widget_add_accelerator(
+      window->priv->view_history_menu_item, "activate", accel_group, GDK_KEY_H,
+      GDK_CONTROL_MASK | GDK_SHIFT_MASK, GTK_ACCEL_VISIBLE);
+
+  menu = add_menu(window->priv->menu_bar, HELP_MENU_LABEL);
+  menu_item =
+      add_menu_item(menu,
+                    gtk_image_menu_item_new_from_icon(
+                        "help-browser", HELP_CONTENTS_LABEL, accel_group),
+                    G_CALLBACK(help_cb), window);
+  gtk_widget_add_accelerator(menu_item, "activate", accel_group, GDK_KEY_F1, 0,
+                             GTK_ACCEL_VISIBLE);
+  add_menu_item(
+      menu,
+      gtk_image_menu_item_new_from_icon("help-about", _("_About"), accel_group),
+      G_CALLBACK(about_cb), window);
+}
+
+static void create_gui(MathWindow *window) {
+  GtkWidget *main_vbox, *vbox;
+  GtkWidget *scrolled_window;
+
+  main_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+  gtk_container_add(GTK_CONTAINER(window), main_vbox);
+  gtk_widget_show(main_vbox);
+
+  window->priv->menu_bar = gtk_menu_bar_new();
+  gtk_box_pack_start(GTK_BOX(main_vbox), window->priv->menu_bar, FALSE, FALSE,
+                     0);
+  gtk_widget_show(window->priv->menu_bar);
+
+  create_menu(window);
+
+  vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
+  gtk_container_set_border_width(GTK_CONTAINER(vbox), 6);
+  gtk_box_pack_start(GTK_BOX(main_vbox), vbox, TRUE, TRUE, 0);
+  gtk_widget_show(vbox);
+
+  window->priv->history = math_history_new(window->priv->equation);
+  g_signal_connect(window->priv->equation, "history",
+                   G_CALLBACK(update_history_cb), window);
+  g_signal_connect(window, "notify::show-history", G_CALLBACK(show_history_cb),
+                   NULL);
+  show_history_cb(window, NULL);
+  g_signal_connect(window->priv->equation, "display-changed",
+                   G_CALLBACK(history_set_serializer_cb), window);
+  history_set_serializer_cb(window->priv->equation, window);
+  gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(window->priv->history), TRUE,
+                     TRUE, 0);
+
+  scrolled_window = gtk_scrolled_window_new(NULL, NULL);
+  gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window),
+                                 GTK_POLICY_AUTOMATIC, GTK_POLICY_NEVER);
+  gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(scrolled_window),
+                                      GTK_SHADOW_IN);
+  gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(scrolled_window), FALSE, FALSE,
+                     0);
+  g_signal_connect(
+      gtk_scrolled_window_get_hadjustment(GTK_SCROLLED_WINDOW(scrolled_window)),
+      "changed", G_CALLBACK(scroll_changed_cb), window);
+  g_signal_connect(
+      gtk_scrolled_window_get_hadjustment(GTK_SCROLLED_WINDOW(scrolled_window)),
+      "value-changed", G_CALLBACK(scroll_value_changed_cb), window);
+  window->priv->right_aligned = TRUE;
+  gtk_widget_show(scrolled_window);
+
+  window->priv->display =
+      math_display_new_with_equation(window->priv->equation);
+  gtk_container_add(GTK_CONTAINER(scrolled_window),
+                    GTK_WIDGET(window->priv->display));
+  gtk_widget_show(GTK_WIDGET(window->priv->display));
+
+  window->priv->buttons = math_buttons_new(window->priv->equation);
+  g_signal_connect(window->priv->buttons, "notify::mode",
+                   G_CALLBACK(button_mode_changed_cb), window);
+  button_mode_changed_cb(window->priv->buttons, NULL, window);
+  gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(window->priv->buttons), FALSE,
+                     FALSE, 0);
+  gtk_widget_show(GTK_WIDGET(window->priv->buttons));
+}
+
+static void math_window_set_property(GObject *object, guint prop_id,
+                                     const GValue *value, GParamSpec *pspec) {
+  MathWindow *self;
+
+  self = MATH_WINDOW(object);
+
+  switch (prop_id) {
     case PROP_EQUATION:
-        g_value_set_object(value, self->priv->equation);
-        break;
+      self->priv->equation = g_value_get_object(value);
+      create_gui(self);
+      break;
     case PROP_SHOW_HISTORY:
-        g_value_set_boolean(value, math_window_get_show_history(self));
-        break;
+      math_window_set_show_history(self, g_value_get_boolean(value));
+      break;
     default:
-        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
-        break;
-    }
+      G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+      break;
+  }
 }
 
-static void
-math_window_class_init(MathWindowClass *klass)
-{
-    GObjectClass *object_class = G_OBJECT_CLASS(klass);
+static void math_window_get_property(GObject *object, guint prop_id,
+                                     GValue *value, GParamSpec *pspec) {
+  MathWindow *self;
 
-    object_class->get_property = math_window_get_property;
-    object_class->set_property = math_window_set_property;
+  self = MATH_WINDOW(object);
 
-    g_object_class_install_property(object_class,
-                                    PROP_EQUATION,
-                                    g_param_spec_object("equation",
-                                                        "equation",
-                                                        "Equation being calculated",
-                                                        math_equation_get_type(),
-                                                        G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
-
-    g_object_class_install_property(object_class,
-                                    PROP_EQUATION,
-                                    g_param_spec_boolean("show-history",
-                                                         "show-history",
-                                                         "Show-history",
-                                                         FALSE,
-                                                         G_PARAM_READWRITE));
-
-    signals[QUIT] = g_signal_new("quit",
-                                 G_TYPE_FROM_CLASS (klass),
-                                 G_SIGNAL_RUN_LAST,
-                                 G_STRUCT_OFFSET (MathWindowClass, quit),
-                                 NULL, NULL,
-                                 g_cclosure_marshal_VOID__VOID,
-                                 G_TYPE_NONE, 0);
+  switch (prop_id) {
+    case PROP_EQUATION:
+      g_value_set_object(value, self->priv->equation);
+      break;
+    case PROP_SHOW_HISTORY:
+      g_value_set_boolean(value, math_window_get_show_history(self));
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+      break;
+  }
 }
 
-static void
-math_window_init(MathWindow *window)
-{
-    window->priv = math_window_get_instance_private (window);
-    gtk_window_set_title(GTK_WINDOW(window),
-                         /* Title of main window */
-                         _("Calculator"));
-    gtk_window_set_icon_name(GTK_WINDOW(window), "accessories-calculator");
-    gtk_window_set_role(GTK_WINDOW(window), "mate-calc");
-    gtk_window_set_resizable(GTK_WINDOW(window), FALSE);
-    g_signal_connect_after(G_OBJECT(window), "key-press-event", G_CALLBACK(key_press_cb), NULL);
-    g_signal_connect(G_OBJECT(window), "delete-event", G_CALLBACK(delete_cb), NULL);
+static void math_window_class_init(MathWindowClass *klass) {
+  GObjectClass *object_class = G_OBJECT_CLASS(klass);
+
+  object_class->get_property = math_window_get_property;
+  object_class->set_property = math_window_set_property;
+
+  g_object_class_install_property(
+      object_class, PROP_EQUATION,
+      g_param_spec_object("equation", "equation", "Equation being calculated",
+                          math_equation_get_type(),
+                          G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+
+  g_object_class_install_property(
+      object_class, PROP_EQUATION,
+      g_param_spec_boolean("show-history", "show-history", "Show-history",
+                           FALSE, G_PARAM_READWRITE));
+
+  signals[QUIT] =
+      g_signal_new("quit", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+                   G_STRUCT_OFFSET(MathWindowClass, quit), NULL, NULL,
+                   g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+}
+
+static void math_window_init(MathWindow *window) {
+  window->priv = math_window_get_instance_private(window);
+  gtk_window_set_title(GTK_WINDOW(window),
+                       /* Title of main window */
+                       _("Calculator"));
+  gtk_window_set_icon_name(GTK_WINDOW(window), "accessories-calculator");
+  gtk_window_set_role(GTK_WINDOW(window), "mate-calc");
+  gtk_window_set_resizable(GTK_WINDOW(window), FALSE);
+  g_signal_connect_after(G_OBJECT(window), "key-press-event",
+                         G_CALLBACK(key_press_cb), NULL);
+  g_signal_connect(G_OBJECT(window), "delete-event", G_CALLBACK(delete_cb),
+                   NULL);
 }

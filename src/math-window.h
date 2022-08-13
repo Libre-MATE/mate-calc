@@ -13,28 +13,28 @@
 #define MATH_WINDOW_H
 
 #include <glib-object.h>
-#include "math-equation.h"
-#include "math-display.h"
+
 #include "math-buttons.h"
+#include "math-display.h"
+#include "math-equation.h"
 #include "math-preferences.h"
 
 G_BEGIN_DECLS
 
-#define MATH_WINDOW(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), math_window_get_type(), MathWindow))
+#define MATH_WINDOW(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj), math_window_get_type(), MathWindow))
 
 typedef struct MathWindowPrivate MathWindowPrivate;
 
-typedef struct
-{
-    GtkWindow parent_instance;
-    MathWindowPrivate *priv;
+typedef struct {
+  GtkWindow parent_instance;
+  MathWindowPrivate *priv;
 } MathWindow;
 
-typedef struct
-{
-    GtkWindowClass parent_class;
+typedef struct {
+  GtkWindowClass parent_class;
 
-    void (*quit) (MathWindow *window);
+  void (*quit)(MathWindow *window);
 } MathWindowClass;
 
 GType math_window_get_type(void);
@@ -53,7 +53,8 @@ gboolean math_window_get_show_history(MathWindow *window);
 
 void math_window_set_show_history(MathWindow *window, gboolean visible);
 
-void math_window_critical_error(MathWindow *window, const gchar *title, const gchar *contents);
+void math_window_critical_error(MathWindow *window, const gchar *title,
+                                const gchar *contents);
 
 G_END_DECLS
 

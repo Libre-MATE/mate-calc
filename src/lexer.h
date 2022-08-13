@@ -4,22 +4,20 @@
 #include "prelexer.h"
 
 /* Structure to hold single token. */
-typedef struct
-{
-    gchar* string;			/* Poniter to local copy of token string. */
-    guint start_index;			/* Start index in original stream. */
-    guint end_index;			/* End index in original stream. */
-    LexerTokenType token_type;		/* Type of token. */
+typedef struct {
+  gchar* string;             /* Poniter to local copy of token string. */
+  guint start_index;         /* Start index in original stream. */
+  guint end_index;           /* End index in original stream. */
+  LexerTokenType token_type; /* Type of token. */
 } LexerToken;
 
 /* Structure to hold lexer state and all the tokens. */
-typedef struct
-{
-    PreLexerState *prelexer;		/* Pre-lexer state. Pre-lexer is part of lexer. */
-    LexerToken *tokens;			/* Pointer to the dynamic array of LexerTokens. */
-    guint token_count;			/* Count of tokens in array. */
-    guint next_token;			/* Index of next, to be sent, token. */
-    struct parser_state *parent;	/* Pointer to the parent parser. */
+typedef struct {
+  PreLexerState* prelexer; /* Pre-lexer state. Pre-lexer is part of lexer. */
+  LexerToken* tokens;      /* Pointer to the dynamic array of LexerTokens. */
+  guint token_count;       /* Count of tokens in array. */
+  guint next_token;        /* Index of next, to be sent, token. */
+  struct parser_state* parent; /* Pointer to the parent parser. */
 } LexerState;
 
 /* Create a new LexerState object and fill the dynamic array with tokens. */

@@ -13,31 +13,26 @@
 
 #include <glib-object.h>
 #include <gtk/gtk.h>
+
 #include "math-equation.h"
 
 G_BEGIN_DECLS
 
-#define MATH_BUTTONS(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), math_buttons_get_type(), MathButtons))
+#define MATH_BUTTONS(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj), math_buttons_get_type(), MathButtons))
 
 typedef struct MathButtonsPrivate MathButtonsPrivate;
 
-typedef struct
-{
-    GtkVBox parent_instance;
-    MathButtonsPrivate *priv;
+typedef struct {
+  GtkVBox parent_instance;
+  MathButtonsPrivate *priv;
 } MathButtons;
 
-typedef struct
-{
-    GtkVBoxClass parent_class;
+typedef struct {
+  GtkVBoxClass parent_class;
 } MathButtonsClass;
 
-typedef enum {
-    BASIC,
-    ADVANCED,
-    FINANCIAL,
-    PROGRAMMING
-} ButtonMode;
+typedef enum { BASIC, ADVANCED, FINANCIAL, PROGRAMMING } ButtonMode;
 
 GType math_buttons_get_type(void);
 

@@ -15,34 +15,30 @@
 #include <glib-object.h>
 #include <gtk/gtk.h>
 
-#include "mp.h"
 #include "math-variables.h"
 #include "mp-serializer.h"
+#include "mp.h"
 
 G_BEGIN_DECLS
 
-#define MATH_TYPE_EQUATION (math_equation_get_type ())
-#define MATH_EQUATION(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), math_equation_get_type(), MathEquation))
-#define MATH_EQUATION_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), MATH_TYPE_EQUATION, MathEquationClass))
+#define MATH_TYPE_EQUATION (math_equation_get_type())
+#define MATH_EQUATION(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj), math_equation_get_type(), MathEquation))
+#define MATH_EQUATION_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS((obj), MATH_TYPE_EQUATION, MathEquationClass))
 
 typedef struct MathEquationPrivate MathEquationPrivate;
 
-typedef struct
-{
-    GtkTextBuffer parent_instance;
-    MathEquationPrivate *priv;
+typedef struct {
+  GtkTextBuffer parent_instance;
+  MathEquationPrivate *priv;
 } MathEquation;
 
-typedef struct
-{
-    GtkTextBufferClass parent_class;
+typedef struct {
+  GtkTextBufferClass parent_class;
 } MathEquationClass;
 
-typedef enum {
-    NORMAL,
-    SUPERSCRIPT,
-    SUBSCRIPT
-} NumberMode;
+typedef enum { NORMAL, SUPERSCRIPT, SUBSCRIPT } NumberMode;
 
 GType math_equation_get_type(void);
 MathEquation *math_equation_new(void);
@@ -66,13 +62,16 @@ NumberMode math_equation_get_number_mode(MathEquation *equation);
 void math_equation_set_accuracy(MathEquation *equation, gint accuracy);
 gint math_equation_get_accuracy(MathEquation *equation);
 
-void math_equation_set_show_thousands_separators(MathEquation *equation, gboolean visible);
+void math_equation_set_show_thousands_separators(MathEquation *equation,
+                                                 gboolean visible);
 gboolean math_equation_get_show_thousands_separators(MathEquation *equation);
 
-void math_equation_set_show_trailing_zeroes(MathEquation *equation, gboolean visible);
+void math_equation_set_show_trailing_zeroes(MathEquation *equation,
+                                            gboolean visible);
 gboolean math_equation_get_show_trailing_zeroes(MathEquation *equation);
 
-void math_equation_set_number_format(MathEquation *equation, MpDisplayFormat format);
+void math_equation_set_number_format(MathEquation *equation,
+                                     MpDisplayFormat format);
 MpDisplayFormat math_equation_get_number_format(MathEquation *equation);
 
 void math_equation_set_base(MathEquation *equation, gint base);
@@ -81,13 +80,16 @@ gint math_equation_get_base(MathEquation *equation);
 void math_equation_set_word_size(MathEquation *equation, gint word_size);
 gint math_equation_get_word_size(MathEquation *equation);
 
-void math_equation_set_angle_units(MathEquation *equation, MPAngleUnit angle_unit);
+void math_equation_set_angle_units(MathEquation *equation,
+                                   MPAngleUnit angle_unit);
 MPAngleUnit math_equation_get_angle_units(MathEquation *equation);
 
-void math_equation_set_source_currency(MathEquation *equation, const gchar *currency);
+void math_equation_set_source_currency(MathEquation *equation,
+                                       const gchar *currency);
 const gchar *math_equation_get_source_currency(MathEquation *equation);
 
-void math_equation_set_target_currency(MathEquation *equation, const gchar *currency);
+void math_equation_set_target_currency(MathEquation *equation,
+                                       const gchar *currency);
 const gchar *math_equation_get_target_currency(MathEquation *equation);
 
 void math_equation_set_source_units(MathEquation *equation, const gchar *units);

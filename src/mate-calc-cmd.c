@@ -8,12 +8,12 @@
  * license.
  */
 
+#include <locale.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
 #include <time.h>
-#include <locale.h>
 
 #include "mp-equation.h"
 #include "mp-serializer.h"
@@ -22,75 +22,68 @@
 
 static MpSerializer *result_serializer;
 
-static void
-solve(const char *equation)
-{
-    int ret;
-    MPEquationOptions options;
-    MPNumber z = mp_new();
-    gchar *result_str = NULL;
+static void solve(const char *equation) {
+  int ret;
+  MPEquationOptions options;
+  MPNumber z = mp_new();
+  gchar *result_str = NULL;
 
-    memset(&options, 0, sizeof(options));
-    options.base = 10;
-    options.wordlen = 32;
-    options.angle_units = MP_DEGREES;
+  memset(&options, 0, sizeof(options));
+  options.base = 10;
+  options.wordlen = 32;
+  options.angle_units = MP_DEGREES;
 
-    ret = mp_equation_parse(equation, &options, &z, NULL);
+  ret = mp_equation_parse(equation, &options, &z, NULL);
 
-    if (ret == PARSER_ERR_MP)
-        fprintf(stderr, "Error %s\n", mp_get_error());
-    else if (ret)
-        fprintf(stderr, "Error %d\n", ret);
-    else {
-        result_str = mp_serializer_to_string(result_serializer, &z);
-        printf("%s\n", result_str);
-    }
-    g_free(result_str);
-    mp_clear(&z);
+  if (ret == PARSER_ERR_MP)
+    fprintf(stderr, "Error %s\n", mp_get_error());
+  else if (ret)
+    fprintf(stderr, "Error %d\n", ret);
+  else {
+    result_str = mp_serializer_to_string(result_serializer, &z);
+    printf("%s\n", result_str);
+  }
+  g_free(result_str);
+  mp_clear(&z);
 }
 
 /* Adjust user input equation string before solving it. */
-static void
-str_adjust(char *str)
-{
-    int i, j = 0;
+static void str_adjust(char *str) {
+  int i, j = 0;
 
-    str[strlen(str)-1] = '\0';        /* Remove newline at end of string. */
-    for (i = 0; str[i] != '\0'; i++) {        /* Remove whitespace. */
-        if (str[i] != ' ' && str[i] != '\t')
-            str[j++] = str[i];
-    }
-    str[j] = '\0';
-    if (j > 0 && str[j-1] == '=')     /* Remove trailing '=' (if present). */
-        str[j-1] = '\0';
+  str[strlen(str) - 1] = '\0';       /* Remove newline at end of string. */
+  for (i = 0; str[i] != '\0'; i++) { /* Remove whitespace. */
+    if (str[i] != ' ' && str[i] != '\t') str[j++] = str[i];
+  }
+  str[j] = '\0';
+  if (j > 0 && str[j - 1] == '=') /* Remove trailing '=' (if present). */
+    str[j - 1] = '\0';
 }
 
-int
-main(void)
-{
-    char *equation, *line;
+int main(void) {
+  char *equation, *line;
 
-    /* Seed random number generator. */
-    srand48((long) time((time_t *) 0));
+  /* Seed random number generator. */
+  srand48((long)time((time_t *)0));
 
-    setlocale(LC_ALL, "");
+  setlocale(LC_ALL, "");
 
-    result_serializer = mp_serializer_new(MP_DISPLAY_FORMAT_AUTOMATIC, 10, 9);
+  result_serializer = mp_serializer_new(MP_DISPLAY_FORMAT_AUTOMATIC, 10, 9);
 
-    equation = (char *) malloc(MAXLINE * sizeof(char));
-    while (1) {
-        printf("> ");
-        line = fgets(equation, MAXLINE, stdin);
+  equation = (char *)malloc(MAXLINE * sizeof(char));
+  while (1) {
+    printf("> ");
+    line = fgets(equation, MAXLINE, stdin);
 
-        if (line != NULL)
-            str_adjust(equation);
+    if (line != NULL) str_adjust(equation);
 
-        if (line == NULL || strcmp(equation, "exit") == 0 || strcmp(equation, "quit") == 0 || strlen(equation) == 0)
-            break;
+    if (line == NULL || strcmp(equation, "exit") == 0 ||
+        strcmp(equation, "quit") == 0 || strlen(equation) == 0)
+      break;
 
-        solve(equation);
-    }
-    free(equation);
+    solve(equation);
+  }
+  free(equation);
 
-    return 0;
+  return 0;
 }

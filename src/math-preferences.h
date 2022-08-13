@@ -13,23 +13,24 @@
 
 #include <glib-object.h>
 #include <gtk/gtk.h>
+
 #include "math-equation.h"
 
 G_BEGIN_DECLS
 
-#define MATH_PREFERENCES(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), math_preferences_get_type(), MathPreferencesDialog))
+#define MATH_PREFERENCES(obj)                                     \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj), math_preferences_get_type(), \
+                              MathPreferencesDialog))
 
 typedef struct MathPreferencesDialogPrivate MathPreferencesDialogPrivate;
 
-typedef struct
-{
-    GtkDialog                 parent_instance;
-    MathPreferencesDialogPrivate *priv;
+typedef struct {
+  GtkDialog parent_instance;
+  MathPreferencesDialogPrivate *priv;
 } MathPreferencesDialog;
 
-typedef struct
-{
-    GtkDialogClass parent_class;
+typedef struct {
+  GtkDialogClass parent_class;
 } MathPreferencesDialogClass;
 
 GType math_preferences_get_type(void);
