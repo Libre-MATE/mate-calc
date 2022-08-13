@@ -42,7 +42,7 @@ Robert Ancell converted the UI to use Glade.
 
 ## Build/Installation
 
-MATE Calculator requires GTK+ (>= 3.22) and the [GNU MPFR](https://www.mpfr.org/) and [GNU MPC](http://www.multiprecision.org/mpc) libraries. For a complete list of dependencies see the [build.yml](https://github.com/mate-desktop/mate-calc/blob/master/.build.yml).
+MATE Calculator requires GTK+ (>= 3.22) and the [GNU MPFR](https://www.mpfr.org/) and [GNU MPC](http://www.multiprecision.org/mpc) libraries.
 
 Simple install procedure:
 
