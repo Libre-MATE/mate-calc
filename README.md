@@ -52,13 +52,3 @@ $ make                                      # Build
 [ Become root if necessary ]
 $ make install                              # Installation
 ```
-
-
-## Acknowledgements
-
-See the [AUTHORS](https://github.com/mate-desktop/mate-calc/blob/master/AUTHORS) file.
-
-Suggestions for further improvement would be most welcome, plus bug
-reports and comments.
-
-The Mate Team.
