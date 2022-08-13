@@ -12,7 +12,6 @@ AM_MAINTAINER_MODE
 MATE_MAINTAINER_MODE_DEFINES
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 
-AC_ISC_POSIX
 AC_PROG_CC
 
 GLIB_GSETTINGS
@@ -48,6 +47,7 @@ AC_SUBST(GLIB_MKENUMS)
 
 AC_CHECK_LIB(m, log)
 AC_CHECK_LIB(mpc, log, [], [AC_MSG_ERROR(could not find required development libraries for MPC)], [])
+AC_SEARCH_LIBS([strerror], [cposix])
 
 dnl ###########################################################################
 dnl Internationalization
