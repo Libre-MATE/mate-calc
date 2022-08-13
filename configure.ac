@@ -5,7 +5,7 @@ AC_INIT([mate-calc],
         [mate-calc],
         [https://github.com/Libre-MATE/mate-calc/])
 AC_PREREQ(2.62)
-
+AC_COPYRIGHT([Copyright (C) 2022 Libre MATE])
 AM_INIT_AUTOMAKE([1.9 foreign no-dist-gzip dist-xz check-news])
 AC_CONFIG_HEADERS(config.h)
 AM_MAINTAINER_MODE
