@@ -9,6 +9,10 @@
  * license.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include "math-equation.h"
 
 #include <ctype.h>

@@ -8,6 +8,10 @@
  * license.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include "math-preferences.h"
 
 #include <glib/gi18n.h>
