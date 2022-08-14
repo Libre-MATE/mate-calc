@@ -29,11 +29,15 @@ HELP_FILES = absolute.page \
              trigonometry.page \
              variables.page
 
+if USE_NLS
 # Add linguas to be ignored, e.g. IGNORE_HELP_LINGUAS = ca de es fr
 IGNORE_HELP_LINGUAS =
 HELP_LINGUAS = $(if $(IGNORE_HELP_LINGUAS), \
 	$(filter-out $(IGNORE_HELP_LINGUAS),$(subst /,,$(dir $(wildcard */*.po)))), \
 	$(subst /,,$(dir $(wildcard */*.po))) )
+else
+HELP_LINGUAS =
+endif
 
 DISTCLEANFILES = \
 	Makefile.in
