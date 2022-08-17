@@ -327,7 +327,8 @@ static void about_cb(GtkWidget *widget, MathWindow *window) {
       GTK_WINDOW(window), "program-name", _("MATE Calculator"), "version",
       VERSION, "title", _("About MATE Calculator"), "copyright",
       _("Copyright \xc2\xa9 1986–2010 The GCalctool authors\n"
-        "Copyright \xc2\xa9 2011-2021 MATE developers"),
+        "Copyright \xc2\xa9 2011-2021 MATE developers\n"
+        "Copyright \xc2\xa9 2022 Libre MATE"),
       "license", license_trans, "comments", comments, "authors", authors,
       "documenters", documenters, "translator_credits", _("translator-credits"),
       "wrap-license", TRUE, "website", PACKAGE_URL, "icon-name",
