@@ -5,7 +5,6 @@ srcdir=`dirname $0`
 test -z "$srcdir" && srcdir=.
 
 PKG_NAME="mate-calc"
-REQUIRED_AUTOMAKE_VERSION=1.7
 REQUIRED_YELP_TOOLS_VERSION=3.1.1
 
 (test -f $srcdir/configure.ac \
