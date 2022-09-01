@@ -14,7 +14,10 @@
 #endif
 
 #include <glib/gi18n.h>
+#ifdef ENABLE_NLS
 #include <locale.h>
+#endif /* ENABLE_NLS */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -182,10 +185,12 @@ int main(int argc, char **argv) {
   gchar *source_currency, *target_currency;
   gchar *source_units, *target_units;
 
+#ifdef ENABLE_NLS
   setlocale(LC_ALL, "");
   bindtextdomain(GETTEXT_PACKAGE, LOCALE_DIR);
   bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
   textdomain(GETTEXT_PACKAGE);
+#endif /* ENABLE_NLS */
 
   /* Seed random number generator. */
   srand48((long)time((time_t *)0));
